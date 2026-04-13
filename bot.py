@@ -188,7 +188,7 @@ async def button_handler(update: Update, _) -> None:
         if user_id != game["leader_id"]:
             await query.answer("Тільки загадуючий може змінити слово!", show_alert=True)
             return
-        game["word"] = random_word()
+        game["word"] = random_word().upper()
         await query.answer(f"Нове слово: {game['word']}", show_alert=True)
 
 
