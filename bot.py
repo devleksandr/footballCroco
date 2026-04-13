@@ -49,6 +49,18 @@ def random_word() -> str:
     return random.choice(WORDS)
 
 
+def pick_word(used: set[str]) -> str:
+    """Pick a random word that hasn't been guessed in this game yet.
+
+    `used` contains lowercased words. If every word has already been
+    guessed, the pool resets and we just pick anything.
+    """
+    available = [w for w in WORDS if w.lower() not in used]
+    if not available:
+        available = WORDS
+    return random.choice(available)
+
+
 # ---------------------------------------------------------------------------
 # Database (ratings)
 # ---------------------------------------------------------------------------
@@ -202,7 +214,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("Гра вже йде! Вгадуйте слово 🐊")
         return
 
-    word = random_word().upper()
+    used_words: set[str] = set()
+    word = pick_word(used_words).upper()
     games[chat_id] = {
         "word": word,
         "leader_id": user.id,
@@ -216,6 +229,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "rounds": {},              # round_id -> {explainer_id, explainer_name, likers, claim_taken}
         "next_round_id": 1,
         "timeout_job": None,
+        "used_words": used_words,  # lowercased words already guessed in this game
     }
 
     schedule_timeout(context, chat_id)
@@ -338,7 +352,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         if user_id != game["leader_id"]:
             await query.answer("Тільки загадуючий може змінити слово!", show_alert=True)
             return
-        game["word"] = random_word().upper()
+        game["word"] = pick_word(game["used_words"]).upper()
         await query.answer(f"🔤 {game['word']}", show_alert=True)
 
     # ---- Claim ("Хочу пояснювати") ----
@@ -367,7 +381,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             return
 
         # Claim accepted — start new round
-        new_word = random_word().upper()
+        new_word = pick_word(game["used_words"]).upper()
         game["word"] = new_word
         game["leader_id"] = user_id
         game["leader_name"] = user_name
@@ -424,6 +438,7 @@ async def guess_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     word = game["word"]
     display_name = user.first_name
     increment_score(chat_id, user.id, display_name)
+    game["used_words"].add(word.lower())
 
     cancel_timeout(game)
 
