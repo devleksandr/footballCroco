@@ -5,7 +5,11 @@
       "Bash(grep -E '\\\\.\\(db|sql|py|js|ts\\)$')",
       "Bash(ls -la /Users/carrickane/Desktop/eRadarCroco/*.db)",
       "Bash(python -c \"import ast; ast.parse\\(open\\('bot.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")",
-      "Bash(python3 -c \"import ast; ast.parse\\(open\\('bot.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")"
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('bot.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")",
+      "Bash(python3 /tmp/gen_words.py)",
+      "Read(//private/tmp/**)",
+      "Bash(python3 /tmp/gen_words2.py)",
+      "Bash(python3 /tmp/finalize.py)"
     ]
   }
 }
