@@ -57,6 +57,13 @@ _APOSTROPHES = "'\u2019\u02bc\u02b9\u2018`\u00b4"
 _SEPARATORS = "- \t\u2010\u2011\u2012\u2013\u2014\u2015"
 
 
+def full_name(user) -> str:
+    """Return user's full name (first + last if available)."""
+    if user.last_name:
+        return f"{user.first_name} {user.last_name}"
+    return user.first_name
+
+
 def normalize(text: str) -> str:
     """Lowercase and strip apostrophes, hyphens, and spaces for guess comparison."""
     text = text.strip().lower()
@@ -82,7 +89,7 @@ def pick_word(used: set[str]) -> str:
 # ---------------------------------------------------------------------------
 # Database (ratings)
 # ---------------------------------------------------------------------------
-DB_PATH = Path(__file__).parent / "rating.db"
+DB_PATH = Path(os.getenv("DB_PATH", Path(__file__).parent / "rating.db"))
 
 
 def _db() -> sqlite3.Connection:
@@ -328,7 +335,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     games[chat_id] = {
         "word": word,
         "leader_id": user.id,
-        "leader_name": user.first_name,
+        "leader_name": full_name(user),
         "active": True,
         "claim_open": False,
         "winner_id": None,
@@ -346,7 +353,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     await update.message.reply_text(
         f"🐊 Гру розпочато!\n\n"
-        f"Загадує: <b>{user.first_name}</b>\n"
+        f"Загадує: <b>{full_name(user)}</b>\n"
         f"Натисніть кнопку нижче, щоб побачити слово (тільки загадуючий).",
         parse_mode="HTML",
         reply_markup=_leader_keyboard(),
@@ -394,7 +401,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     query = update.callback_query
     chat_id = query.message.chat_id
     user_id = query.from_user.id
-    user_name = query.from_user.first_name
+    user_name = full_name(query.from_user)
 
     game = games.get(chat_id)
     data = query.data or ""
@@ -557,7 +564,7 @@ async def guess_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     # ---- Correct guess ----
     word = game["word"]
-    display_name = user.first_name
+    display_name = full_name(user)
     increment_score(chat_id, user.id, display_name)
     game["used_words"].add(word.lower())
 
