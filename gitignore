@@ -1,3 +1,4 @@
 rating.db
 .claude/
 .env
+.env.example
